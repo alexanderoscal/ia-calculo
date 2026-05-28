@@ -1,0 +1,15 @@
+{
+    "name": "ia-calculo",
+    "version": "1.0.0",
+    "description": "Asistente IA para el curso de Cálculo 1 - UMG",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js"
+    },
+    "dependencies": {
+        "@supabase/supabase-js": "^2.43.0",
+        "bcrypt": "^6.0.0",
+        "dotenv": "^16.4.5",
+        "express": "^4.19.2"
+    }
+}

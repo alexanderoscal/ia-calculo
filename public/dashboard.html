@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Aprendizaje - Cálculo 1 UMG</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+    <style>
+        :root {
+            --bg-main: #0f172a;
+            /* Azul pizarra oscuro (Más institucional) */
+            --bg-sidebar: #1e293b;
+            /* Contraste perfecto para el menú */
+            --bg-card: #ffffff;
+            /* Las respuestas de la IA ahora serán tarjetas blancas/claras súper legibles */
+            --bg-user-msg: #f1f5f9;
+            /* Burbuja gris claro para el alumno */
+            --primary-umg: #3b82f6;
+            /* Azul brillante universitario */
+            --primary-hover: #2563eb;
+            --texto-oscuro: #1e293b;
+            --texto-claro: #f8fafc;
+            --texto-mutado: #94a3b8;
+            --border-color: #334155;
+            --verde-online: #22c55e;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--texto-claro);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* SIDEBAR INSTITUCIONAL */
+        .sidebar {
+            width: 290px;
+            height: 100%;
+            background-color: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 26px;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-brand .icon-box {
+            background-color: var(--primary-umg);
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-brand i {
+            color: white;
+            font-size: 1.4rem;
+        }
+
+        .sidebar-brand h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: white;
+            letter-spacing: -0.01em;
+        }
+
+        .sidebar-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 24px;
+            flex: 1;
+        }
+
+        .menu-section-title {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--texto-mutado);
+            margin: 16px 0 8px 8px;
+            font-weight: 700;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            color: #cbd5e1;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .menu-item:hover,
+        .menu-item.active {
+            background-color: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+            font-weight: 600;
+        }
+
+        .sidebar-user {
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary-umg), #1d4ed8);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--texto-mutado);
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:hover {
+            color: #ef4444;
+            background-color: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+
+        /* ESPACIO DE TRABAJO PRINCIPAL */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background-color: #0b0f19;
+        }
+
+        .main-header {
+            padding: 24px 40px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--bg-sidebar);
+        }
+
+        .main-header h1 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .course-badge {
+            font-size: 0.8rem;
+            color: var(--texto-claro);
+            background-color: rgba(255, 255, 255, 0.05);
+            padding: 6px 14px;
+            border-radius: 30px;
+            border: 1px solid var(--border-color);
+            font-weight: 500;
+        }
+
+        /* AREA DE CONTENIDO ESTILO REPASO */
+        .chat-messages {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+
+        /* CAMBIO RADICAL EN LAS BURBUJAS */
+        .msg {
+            padding: 20px 24px;
+            border-radius: 16px;
+            line-height: 1.6;
+            font-size: 0.98rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            animation: subida 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes subida {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* El mensaje del alumno */
+        .msg.user {
+            background-color: var(--bg-user-msg);
+            color: var(--texto-oscuro);
+            align-self: flex-end;
+            max-width: 65%;
+            border-bottom-right-radius: 4px;
+            font-weight: 500;
+        }
+
+        /* La respuesta de la IA (Estilo Tarjeta de Estudio) */
+        .msg.ia {
+            background-color: var(--bg-card);
+            color: var(--texto-oscuro);
+            border-left: 5px solid var(--primary-umg);
+            align-self: flex-start;
+            max-width: 80%;
+            border-bottom-left-radius: 4px;
+        }
+
+        .msg.ia strong {
+            color: #0f172a;
+        }
+
+        /* CONTENEDOR DE ENTRADA */
+        .chat-input-container {
+            padding: 28px 40px;
+            background-color: var(--bg-sidebar);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .input-wrapper {
+            background-color: var(--bg-main);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 6px 8px 6px 18px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .input-wrapper input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 12px 0;
+            color: var(--texto-claro);
+            font-size: 0.98rem;
+        }
+
+        .input-wrapper input:focus {
+            outline: none;
+        }
+
+        .btn-enviar {
+            background-color: var(--primary-umg);
+            color: white;
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .btn-enviar:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .msg pre {
+            background-color: #1e293b;
+            color: #f8fafc;
+            padding: 16px;
+            border-radius: 12px;
+            overflow-x: auto;
+            margin-top: 12px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <aside class="sidebar">
+        <div>
+            <div class="sidebar-brand">
+                <div class="icon-box">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <h3>Portal de Cálculo</h3>
+            </div>
+
+            <div class="sidebar-menu">
+                <span class="menu-section-title">Canal de Consultas</span>
+                <div class="menu-item active">
+                    <i class="fa-regular fa-comment-dots"></i> Tutoría Virtual IA
+                </div>
+
+                <span class="menu-section-title">Temario Sugerido</span>
+                <div class="menu-item"
+                    onclick="insertarSugerencia('¿Qué es un límite matemático y cuáles son sus propiedades?')">
+                    <i class="fa-solid fa-shapes"></i> 1. Concepto de Límites
+                </div>
+                <div class="menu-item"
+                    onclick="insertarSugerencia('Explícame de forma sencilla la regla de la cadena para derivadas')">
+                    <i class="fa-solid fa-wave-square"></i> 2. Reglas de Derivación
+                </div>
+                <div class="menu-item"
+                    onclick="insertarSugerencia('¿Cómo se aplican las derivadas en un problema de optimización?')">
+                    <i class="fa-solid fa-arrow-trend-up"></i> 3. Aplicaciones Prácticas
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar-user">
+            <div class="user-info">
+                <div class="user-avatar" id="avatarLetra">U</div>
+                <div>
+                    <p style="font-size: 0.92rem; font-weight: 600; text-transform: capitalize; color: white;"
+                        id="sidebarNombre">Estudiante</p>
+                    <span
+                        style="font-size: 0.78rem; color: var(--texto-mutado); display: flex; align-items: center; gap: 5px;">
+                        <i class="fa-solid fa-circle" style="color: var(--verde-online); font-size: 0.5rem;"></i> En
+                        Línea
+                    </span>
+                </div>
+            </div>
+            <button class="btn-logout" onclick="logout()" title="Cerrar Módulo">
+                <i class="fa-solid fa-power-off"></i>
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="main-header">
+            <h1>Tutor de Aprendizaje Inteligente</h1>
+            <div class="course-badge">
+                <i class="fa-regular fa-bookmark" style="margin-right: 6px;"></i> Ingeniería en Sistemas • UMG
+            </div>
+        </header>
+
+        <div class="chat-messages" id="chatBoxes">
+        </div>
+
+        <div class="chat-input-container">
+            <div class="input-wrapper">
+                <input type="text" id="userInput"
+                    placeholder="Formula una pregunta sobre teoremas, funciones o ejercicios de Cálculo..."
+                    onkeypress="if(event.key === 'Enter') procesarPregunta()">
+                <button class="btn-enviar" onclick="procesarPregunta()">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        window.onload = () => {
+            const usuario = localStorage.getItem('sesion_usuario');
+            if (!usuario) {
+                window.location.href = '/index.html';
+                return;
+            }
+
+            document.getElementById('sidebarNombre').innerText = usuario;
+            document.getElementById('avatarLetra').innerText = usuario.charAt(0).toUpperCase();
+
+            // Mensaje Inicial Limpio y Personalizado
+            document.getElementById('chatBoxes').innerHTML = `
+                <div class="msg ia">¡Bienvenido, <strong style="text-transform: capitalize;">${usuario}</strong>! Listo para aprender más sobre cálculo. ¿Qué tema o fórmula deseas resolver hoy?</div>
+            `;
+            document.getElementById('userInput').focus();
+        };
+
+        function logout() {
+            localStorage.removeItem('sesion_usuario');
+            window.location.href = '/index.html';
+        }
+
+        function insertarSugerencia(texto) {
+            document.getElementById('userInput').value = texto;
+            document.getElementById('userInput').focus();
+        }
+
+        async function procesarPregunta() {
+            const userInput = document.getElementById('userInput');
+            const pregunta = userInput.value.trim();
+            if (!pregunta) return;
+
+            agregarMensaje(pregunta, 'user');
+            userInput.value = '';
+
+            const indicadorPensando = agregarMensaje('<i class="fa-solid fa-circle-notch fa-spin"></i> Contrastando con los registros del curso y estructurando respuesta...', 'ia');
+
+            try {
+                const response = await fetch('/api/preguntar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pregunta })
+                });
+                const data = await response.json();
+
+                indicadorPensando.innerHTML = data.respuesta.replace(/\n/g, '<br>');
+                if (window.MathJax?.typesetPromise) window.MathJax.typesetPromise();
+
+            } catch (err) {
+                indicadorPensando.innerText = "Error al conectar con la plataforma central.";
+            }
+        }
+
+        function agregarMensaje(texto, remitente) {
+            const div = document.createElement('div');
+            div.classList.add('msg', remitente);
+            div.innerHTML = texto;
+            const box = document.getElementById('chatBoxes');
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+            return div;
+        }
+    </script>
+</body>
+
+</html>

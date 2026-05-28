@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Acceso - Cálculo 1</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-principal: #06070a;
+            --bg-tarjeta: #11131f;
+            --bg-input: #171a26;
+            --azul-premium: #4f46e5;
+            --azul-hover: #6366f1;
+            --texto-p: #f3f4f6;
+            --texto-s: #9ca3af;
+            --borde: #1f2433;
+            --rojo-error: #ef4444;
+            --verde-exito: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-principal);
+            background-image: radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.12) 0px, transparent 50%);
+            color: var(--texto-p);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .auth-wrapper {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+        }
+
+        .auth-card {
+            background-color: var(--bg-tarjeta);
+            border: 1px solid var(--borde);
+            border-radius: 24px;
+            padding: 40px 35px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            display: none;
+            flex-direction: column;
+            gap: 24px;
+            animation: vista-suave 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .auth-card.active {
+            display: flex;
+        }
+
+        .auth-header {
+            text-align: center;
+        }
+
+        .auth-header h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #ffffff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .auth-header p {
+            color: var(--texto-s);
+            font-size: 0.88rem;
+            margin-top: 6px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--texto-s);
+        }
+
+        input {
+            background-color: var(--bg-input);
+            border: 1px solid var(--borde);
+            padding: 14px 16px;
+            border-radius: 14px;
+            color: var(--texto-p);
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--azul-hover);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+
+        .btn-accion {
+            background-color: var(--azul-premium);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-accion:hover {
+            background-color: var(--azul-hover);
+            transform: translateY(-1px);
+        }
+
+        .auth-footer {
+            text-align: center;
+            font-size: 0.88rem;
+            color: var(--texto-s);
+        }
+
+        .auth-footer a {
+            color: var(--azul-hover);
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .status-msg {
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: none;
+        }
+
+        .status-msg.error {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--rojo-error);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            display: block;
+        }
+
+        .status-msg.exito {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--verde-exito);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            display: block;
+        }
+
+        @keyframes vista-suave {
+            from {
+                opacity: 0;
+                transform: scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="auth-wrapper">
+        <div class="auth-card active" id="cardLogin">
+            <div class="auth-header">
+                <h2>Iniciar Sesión</h2>
+                <p>Portal Universitario de Cálculo 1</p>
+            </div>
+            <div class="status-msg" id="loginMsg"></div>
+            <div class="form-group">
+                <label><i class="fa-regular fa-user"></i> Usuario</label>
+                <input type="text" id="login_user" placeholder="Ingresa tu usuario">
+            </div>
+            <div class="form-group">
+                <label><i class="fa-solid fa-lock"></i> Contraseña</label>
+                <input type="password" id="login_pass" placeholder="••••••••">
+            </div>
+            <button class="btn-accion" onclick="ejecutarLogin()">Acceder</button>
+            <div class="auth-footer">
+                ¿No tienes cuenta? <a onclick="irAPantalla('cardRegister')">Créala aquí</a>
+            </div>
+        </div>
+
+        <div class="auth-card" id="cardRegister">
+            <div class="auth-header">
+                <h2>Crear Cuenta</h2>
+                <p>Regístrate en la plataforma de la U</p>
+            </div>
+            <div class="status-msg" id="registerMsg"></div>
+            <div class="form-group">
+                <label>Elige tu Usuario</label>
+                <input type="text" id="reg_user" placeholder="Ej: brayan_oscal">
+            </div>
+            <div class="form-group">
+                <label>Contraseña</label>
+                <input type="password" id="reg_pass" placeholder="Mínimo 6 caracteres">
+            </div>
+            <button class="btn-accion" onclick="ejecutarRegistro()"
+                style="background-color: var(--verde-exito);">Registrar Usuario</button>
+            <div class="auth-footer">
+                ¿Ya tienes una cuenta? <a onclick="irAPantalla('cardLogin')">Inicia sesión</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function irAPantalla(pantallaId) {
+            document.querySelectorAll('.auth-card').forEach(card => card.classList.remove('active'));
+            document.getElementById(pantallaId).classList.add('active');
+            document.getElementById('loginMsg').className = 'status-msg';
+            document.getElementById('registerMsg').className = 'status-msg';
+        }
+
+        window.onload = () => {
+            if (localStorage.getItem('sesion_usuario')) {
+                window.location.href = '/dashboard.html';
+            }
+        };
+
+        async function ejecutarLogin() {
+            const usuario = document.getElementById('login_user').value.trim();
+            const contrasena = document.getElementById('login_pass').value;
+            const msgBox = document.getElementById('loginMsg');
+
+            if (!usuario || !contrasena) {
+                msgBox.innerText = "Por favor llena todos los campos.";
+                msgBox.className = "status-msg error";
+                return;
+            }
+
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ usuario, contrasena })
+            });
+            const data = await res.json();
+
+            if (data.error) {
+                msgBox.innerText = data.error;
+                msgBox.className = "status-msg error";
+                return;
+            }
+
+            localStorage.setItem('sesion_usuario', data.usuario);
+            window.location.href = '/dashboard.html';
+        }
+
+        async function ejecutarRegistro() {
+            const usuario = document.getElementById('reg_user').value.trim();
+            const contrasena = document.getElementById('reg_pass').value;
+            const msgBox = document.getElementById('registerMsg');
+
+            if (!usuario || !contrasena) {
+                msgBox.innerText = "Completa los campos para tu registro.";
+                msgBox.className = "status-msg error";
+                return;
+            }
+
+            const res = await fetch('/api/registrar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ usuario, contrasena })
+            });
+            const data = await res.json();
+
+            if (data.error) {
+                msgBox.innerText = data.error;
+                msgBox.className = "status-msg error";
+                return;
+            }
+
+            msgBox.innerText = "¡Cuenta creada con éxito! Redirigiendo...";
+            msgBox.className = "status-msg exito";
+
+            setTimeout(() => {
+                document.getElementById('login_user').value = usuario;
+                irAPantalla('cardLogin');
+            }, 1200);
+        }
+    </script>
+</body>
+
+</html>
