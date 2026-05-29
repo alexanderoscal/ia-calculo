@@ -4,15 +4,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal de Aprendizaje - Cálculo 1 UMG</title>
+    <title>Tutor IA - Cálculo 1 UMG</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- MathJax: versión ligera para LaTeX -->
+    <!-- CONFIGURACIÓN PREVIA DE MATHJAX (OBLIGATORIA) -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            options: {
+                ignoreHtmlClass: 'ignore-math'
+            },
+            startup: {
+                ready: () => {
+                    MathJax.startup.defaultReady();
+                    console.log('MathJax listo');
+                }
+            }
+        };
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" id="MathJax-script" async></script>
-    <!-- Marked para convertir Markdown a HTML -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
+        /* ========== ESTILOS COMPLETOS (igual a los que ya tenías) ========== */
         :root {
             --bg-main: #0f172a;
             --bg-sidebar: #1e293b;
@@ -40,13 +58,10 @@
             height: 100vh;
             display: flex;
             overflow: hidden;
-            flex-direction: row;
         }
 
-        /* Sidebar a la derecha */
         .sidebar {
             width: 290px;
-            height: 100%;
             background-color: var(--bg-sidebar);
             border-left: 1px solid var(--border-color);
             display: flex;
@@ -83,7 +98,6 @@
             font-size: 1.2rem;
             font-weight: 700;
             color: white;
-            letter-spacing: -0.01em;
         }
 
         .sidebar-menu {
@@ -113,14 +127,13 @@
             font-size: 0.9rem;
             font-weight: 500;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.2s;
         }
 
         .menu-item:hover,
         .menu-item.active {
             background-color: rgba(59, 130, 246, 0.15);
             color: #60a5fa;
-            font-weight: 600;
         }
 
         .sidebar-user {
@@ -147,7 +160,6 @@
             align-items: center;
             justify-content: center;
             font-weight: 700;
-            font-size: 1rem;
         }
 
         .btn-logout {
@@ -157,16 +169,13 @@
             cursor: pointer;
             padding: 10px;
             border-radius: 10px;
-            transition: all 0.2s;
         }
 
         .btn-logout:hover {
             color: #ef4444;
             background-color: rgba(239, 68, 68, 0.1);
-            border-color: rgba(239, 68, 68, 0.2);
         }
 
-        /* Contenido principal */
         .main-content {
             flex: 1;
             display: flex;
@@ -188,20 +197,16 @@
         .main-header h1 {
             font-size: 1.35rem;
             font-weight: 700;
-            color: white;
         }
 
         .course-badge {
             font-size: 0.8rem;
-            color: var(--texto-claro);
             background-color: rgba(255, 255, 255, 0.05);
             padding: 6px 14px;
             border-radius: 30px;
             border: 1px solid var(--border-color);
-            font-weight: 500;
         }
 
-        /* Mensajes */
         .chat-messages {
             flex: 1;
             padding: 40px;
@@ -217,7 +222,7 @@
             line-height: 1.6;
             font-size: 0.98rem;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-            animation: subida 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: subida 0.35s ease;
         }
 
         @keyframes subida {
@@ -238,7 +243,6 @@
             align-self: flex-end;
             max-width: 65%;
             border-bottom-right-radius: 4px;
-            font-weight: 500;
         }
 
         .msg.ia {
@@ -250,18 +254,12 @@
             border-bottom-left-radius: 4px;
         }
 
-        .msg.ia strong {
-            color: #0f172a;
-        }
-
         .msg.ia pre {
             background-color: #1e293b;
             color: #f8fafc;
             padding: 16px;
             border-radius: 12px;
             overflow-x: auto;
-            margin-top: 12px;
-            font-family: monospace;
         }
 
         .msg.ia code {
@@ -269,14 +267,6 @@
             color: #1e293b;
             padding: 2px 6px;
             border-radius: 6px;
-            font-family: monospace;
-        }
-
-        .msg.ia ul,
-        .msg.ia ol {
-            margin-left: 1.5rem;
-            margin-top: 8px;
-            margin-bottom: 8px;
         }
 
         .btn-ejercicios {
@@ -287,14 +277,12 @@
             font-weight: 600;
             margin-top: 15px;
             display: inline-block;
-            transition: 0.2s;
         }
 
         .btn-ejercicios:hover {
             text-decoration: underline;
         }
 
-        /* Input */
         .chat-input-container {
             padding: 28px 40px;
             background-color: var(--bg-sidebar);
@@ -335,7 +323,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: background 0.2s;
         }
 
         .btn-enviar:hover {
@@ -345,8 +332,6 @@
 </head>
 
 <body>
-
-    <!-- SIDEBAR DERECHA -->
     <aside class="sidebar">
         <div>
             <div class="sidebar-brand">
@@ -358,21 +343,17 @@
                 <div class="menu-item active"><i class="fa-regular fa-comment-dots"></i> Tutoría Virtual IA</div>
                 <span class="menu-section-title">Temario Sugerido</span>
                 <div class="menu-item"
-                    onclick="insertarSugerencia('¿Qué es un límite matemático y cuáles son sus propiedades?')">
-                    <i class="fa-solid fa-shapes"></i> 1. Concepto de Límites
-                </div>
+                    onclick="insertarSugerencia('¿Qué es un límite matemático y cuáles son sus propiedades?')"><i
+                        class="fa-solid fa-shapes"></i> 1. Concepto de Límites</div>
                 <div class="menu-item"
-                    onclick="insertarSugerencia('Explícame de forma sencilla la regla de la cadena para derivadas')">
-                    <i class="fa-solid fa-wave-square"></i> 2. Regla de la Cadena
-                </div>
+                    onclick="insertarSugerencia('Explícame de forma sencilla la regla de la cadena para derivadas')"><i
+                        class="fa-solid fa-wave-square"></i> 2. Regla de la Cadena</div>
                 <div class="menu-item"
-                    onclick="insertarSugerencia('¿Cómo se aplican las derivadas en un problema de optimización?')">
-                    <i class="fa-solid fa-arrow-trend-up"></i> 3. Optimización
-                </div>
+                    onclick="insertarSugerencia('¿Cómo se aplican las derivadas en un problema de optimización?')"><i
+                        class="fa-solid fa-arrow-trend-up"></i> 3. Optimización</div>
                 <div class="menu-item"
-                    onclick="insertarSugerencia('¿Cómo resolver límites indeterminados por factorización?')">
-                    <i class="fa-solid fa-calculator"></i> 4. Límites por factorización
-                </div>
+                    onclick="insertarSugerencia('¿Cómo resolver límites indeterminados por factorización?')"><i
+                        class="fa-solid fa-calculator"></i> 4. Límites por factorización</div>
             </div>
         </div>
         <div class="sidebar-user">
@@ -381,24 +362,17 @@
                 <div>
                     <p style="font-size: 0.92rem; font-weight: 600; text-transform: capitalize; color: white;"
                         id="sidebarNombre">Estudiante</p>
-                    <span
-                        style="font-size: 0.78rem; color: var(--texto-mutado); display: flex; align-items: center; gap: 5px;">
-                        <i class="fa-solid fa-circle" style="color: var(--verde-online); font-size: 0.5rem;"></i> En
-                        Línea
-                    </span>
+                    <span style="font-size: 0.78rem; color: var(--texto-mutado);"><i class="fa-solid fa-circle"
+                            style="color: var(--verde-online); font-size: 0.5rem;"></i> En Línea</span>
                 </div>
             </div>
-            <button class="btn-logout" onclick="logout()" title="Cerrar Módulo"><i
-                    class="fa-solid fa-power-off"></i></button>
+            <button class="btn-logout" onclick="logout()"><i class="fa-solid fa-power-off"></i></button>
         </div>
     </aside>
-
-    <!-- CONTENIDO PRINCIPAL (CHAT) -->
     <main class="main-content">
         <header class="main-header">
             <h1>Tutor de Aprendizaje Inteligente</h1>
-            <div class="course-badge"><i class="fa-regular fa-bookmark" style="margin-right: 6px;"></i> Ingeniería en
-                Sistemas • UMG</div>
+            <div class="course-badge"><i class="fa-regular fa-bookmark"></i> Ingeniería en Sistemas • UMG</div>
         </header>
         <div class="chat-messages" id="chatBoxes"></div>
         <div class="chat-input-container">
@@ -410,9 +384,7 @@
             </div>
         </div>
     </main>
-
     <script>
-        let currentRespuestaElement = null;
         let currentTema = "";
 
         window.onload = () => {
@@ -433,7 +405,7 @@
             if (!pregunta) return;
             agregarMensaje(pregunta, 'user');
             userInput.value = '';
-            const indicadorPensando = agregarMensaje('<i class="fa-solid fa-circle-notch fa-spin"></i> Contrastando con los registros del curso y estructurando respuesta...', 'ia');
+            const indicadorPensando = agregarMensaje('<i class="fa-solid fa-circle-notch fa-spin"></i> Procesando tu consulta...', 'ia');
             try {
                 const response = await fetch('/api/preguntar', {
                     method: 'POST',
@@ -442,22 +414,21 @@
                 });
                 const data = await response.json();
                 // Convertir Markdown a HTML
-                indicadorPensando.innerHTML = marked.parse(data.respuesta);
-                // Renderizar fórmulas con MathJax
+                const htmlContent = marked.parse(data.respuesta);
+                indicadorPensando.innerHTML = htmlContent;
+                // Forzar renderizado de MathJax (con await para asegurar)
                 if (window.MathJax) {
-                    MathJax.typesetPromise([indicadorPensando]).catch(err => console.log(err));
+                    await MathJax.typesetPromise([indicadorPensando]).catch(err => console.warn("MathJax error:", err));
                 }
-                // Extraer tema y agregar botón de ejercicios
-                const temaExtraido = pregunta.split(' ').slice(0, 5).join(' ');
-                currentRespuestaElement = indicadorPensando;
-                currentTema = temaExtraido;
+                currentTema = pregunta.split(' ').slice(0, 5).join(' ');
                 const btn = document.createElement('button');
                 btn.innerText = '📘 Sugerir ejercicios sobre este tema';
                 btn.className = 'btn-ejercicios';
                 btn.onclick = () => sugerirEjercicios(currentTema);
                 indicadorPensando.appendChild(btn);
             } catch (err) {
-                indicadorPensando.innerText = "Error al conectar con la plataforma central.";
+                indicadorPensando.innerHTML = "❌ Error al conectar con el servidor. Inténtalo de nuevo.";
+                console.error(err);
             }
         }
 
@@ -477,10 +448,11 @@
                 ejerciciosHtml += '</ul><small>Intenta resolverlos y consulta las dudas conmigo.</small>';
                 ejerciciosMsg.innerHTML = ejerciciosHtml;
                 if (window.MathJax) {
-                    MathJax.typesetPromise([ejerciciosMsg]).catch(err => console.log(err));
+                    await MathJax.typesetPromise([ejerciciosMsg]).catch(console.warn);
                 }
             } catch (err) {
                 ejerciciosMsg.innerHTML = '⚠️ No se pudieron generar ejercicios en este momento.';
+                console.error(err);
             }
         }
 

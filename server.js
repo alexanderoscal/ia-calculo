@@ -57,13 +57,34 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+// ------------------ FUNCIÓN PARA POST-PROCESAR LATEX ------------------
+function asegurarDelimitadoresLaTeX(texto) {
+    // Envuelve expresiones comunes de LaTeX que no estén ya dentro de $ o $$
+    // Evita duplicar delimitadores
+    if (!texto) return texto;
+    // Patrón para encontrar \frac, \int, \sum, \lim, \sin, \cos, etc. sin delimitadores
+    // Este es un reemplazo básico; lo ideal es confiar en las instrucciones de la IA.
+    let nuevo = texto;
+    // Evitar procesar dentro de bloques de código
+    const bloquesCodigo = [];
+    nuevo = nuevo.replace(/```[\s\S]*?```/g, (match) => {
+        bloquesCodigo.push(match);
+        return `__CODEBLOCK_${bloquesCodigo.length - 1}__`;
+    });
+    // Envolver expresiones sueltas que parecen LaTeX
+    nuevo = nuevo.replace(/(?<!\$)(\\[a-zA-Z]+(?:\(.*?\))?(?:\^\{.*?\})?(?:\_.*?)?(?:\{.*?\})?)(?!\$)/g, '$$$1$$');
+    // Restaurar bloques de código
+    nuevo = nuevo.replace(/__CODEBLOCK_(\d+)__/g, (_, i) => bloquesCodigo[parseInt(i)]);
+    return nuevo;
+}
+
 // ------------------ ASISTENTE IA CON RAG ------------------
 app.post('/api/preguntar', async (req, res) => {
     const { pregunta } = req.body;
     if (!pregunta) return res.status(400).json({ error: 'La pregunta es requerida' });
 
     try {
-        // Tokenización
+        // Tokenización para búsqueda semántica simple
         const palabras = pregunta.toLowerCase().match(/\b\w+\b/g) || [];
         const stopWords = ['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'de', 'y', 'a', 'qué', 'cómo', 'cuál', 'por', 'para', 'con', 'sin', 'sobre', 'esa', 'este', 'esto', 'que', 'me', 'te', 'se', 'le', 'lo', 'la', 'las', 'los', 'mi', 'tu', 'su', 'del', 'al', 'como', 'más', 'pero', 'si', 'no', 'ya', 'muy', 'solo', 'tan', 'tanto', 'donde', 'cuando'];
         const tokensFiltrados = palabras.filter(t => !stopWords.includes(t) && t.length > 2);
@@ -106,9 +127,9 @@ app.post('/api/preguntar', async (req, res) => {
 
         let instruccionesIA = "";
         if (existeEnBD) {
-            instruccionesIA = `Eres un tutor experto en Cálculo 1 para la UMG. Usa el siguiente contexto oficial de la base de datos universitaria para responder:\n\n${contextoEncontrado}\n\n**Reglas de formato:**\n- Usa **negritas** para los conceptos clave.\n- Usa listas numeradas o con viñetas para los pasos o enumeraciones.\n- Para fórmulas matemáticas, utiliza siempre el formato LaTeX con delimitadores $$ para ecuaciones en bloque y $ para expresiones en línea.\n- Ejemplo correcto: $$\\frac{d}{dx}[\\sin(x^2)] = 2x\\cos(x^2)$$\n- **Prohibido escribir fórmulas incompletas** como \\frac{dx}{dx} sin contexto.\n- Para código o pseudocódigo, usa bloques con \`\`\`.\n- Estructura la respuesta en secciones cortas con títulos en negrita.\n- Incluye un ejemplo resuelto y al final ofrece 2 ejercicios similares para practicar.`;
+            instruccionesIA = `Eres un tutor experto en Cálculo 1 para la UMG. Usa el siguiente contexto oficial de la base de datos universitaria para responder:\n\n${contextoEncontrado}\n\n**Reglas de formato OBLIGATORIAS:**\n- Usa **negritas** para conceptos clave.\n- Usa listas numeradas o viñetas.\n- **Todas las fórmulas matemáticas deben ir dentro de delimitadores LaTeX:**\n  * Fórmulas en línea: $ ... $  (ejemplo: $\\frac{dy}{dx} = 2x$)\n  * Fórmulas en bloque (destacadas): $$ ... $$  (ejemplo: $$\\int_a^b f(x)dx$$)\n- Nunca escribas expresiones LaTeX sin delimitadores.\n- Si la expresión es larga o contiene símbolos como \\frac, \\int, \\sum, \\lim, \\sin, etc., asegúrate de encerrarla en $$.\n- Incluye siempre un ejemplo resuelto paso a paso y al final ofrece 2 ejercicios similares para practicar.\n- Responde de manera didáctica, como si estuvieras explicando en pizarra.`;
         } else {
-            instruccionesIA = `Eres un tutor experto en Cálculo 1 para la UMG.\n**IMPORTANTE**: El tema NO está en la base de datos local.\nTu respuesta DEBE comenzar con:\n"**[Aviso: Esta respuesta fue generada usando el conocimiento general de la IA, ya que el tema específico no se encuentra mapeado en la base de datos de la universidad].**"\nLuego salta una línea y responde normalmente. Aplica el mismo formato estructurado: negritas, listas, bloques de código, ejemplos y ejercicios finales. Además, cuida que las fórmulas LaTeX estén bien escritas y delimitadas con $$ o $.`;
+            instruccionesIA = `Eres un tutor experto en Cálculo 1 para la UMG.\n**IMPORTANTE**: El tema NO está en la base de datos local.\nTu respuesta DEBE comenzar con:\n\n**[Aviso: Esta respuesta fue generada usando el conocimiento general de la IA, ya que el tema específico no se encuentra mapeado en la base de datos de la universidad].**\n\nLuego salta una línea y responde normalmente. Aplica las mismas reglas de formato estrictas (negritas, listas, delimitadores LaTeX $ y $$, ejemplos y ejercicios).`;
         }
 
         const chatCompletion = await groq.chat.completions.create({
@@ -121,7 +142,9 @@ app.post('/api/preguntar', async (req, res) => {
             max_tokens: 1500,
         });
 
-        const respuestaIA = chatCompletion.choices[0]?.message?.content || "Lo siento, no pude generar una respuesta.";
+        let respuestaIA = chatCompletion.choices[0]?.message?.content || "Lo siento, no pude generar una respuesta.";
+        // Post-procesar para asegurar delimitadores (por si la IA falla)
+        respuestaIA = asegurarDelimitadoresLaTeX(respuestaIA);
         res.json({ respuesta: respuestaIA });
 
     } catch (err) {
@@ -185,5 +208,5 @@ app.post('/api/sugerir-ejercicios', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`✅ Servidor corriendo en puerto ${PORT} con RAG mejorado y ejercicios`);
+    console.log(`✅ Servidor corriendo en puerto ${PORT} con RAG mejorado y post-procesado LaTeX`);
 });
