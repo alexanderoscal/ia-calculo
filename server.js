@@ -3,7 +3,7 @@ const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
 const bcrypt = require('bcrypt');
 
-// 1. IMPORTACIÓN CON EL NOMBRE REAL DE LA CLASE DEL SDK DE GOOGLE
+// 1. IMPORTACIÓN CORREGIDA: El nombre real de la clase es GoogleGenAI
 const { GoogleGenAI } = require('@google/generative-ai');
 
 const app = express();
@@ -13,7 +13,7 @@ const SALT_ROUNDS = 10;
 // Inicializar Supabase
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-// 2. INICIALIZACIÓN OFICIAL DEL TUTOR DE IA
+// 2. INICIALIZACIÓN OFICIAL: Usando el constructor correcto
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 app.use(express.json());
@@ -123,7 +123,7 @@ app.post('/api/preguntar', async (req, res) => {
 
         const promptCompleto = `${instruccionesIA}\n\nPregunta del estudiante: ${pregunta}\nRespuesta educativa estructurada:`;
 
-        // Métodos oficiales de la clase GoogleGenAI
+        // Llamar al modelo usando los métodos correctos de la instancia ai
         const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
         const result = await model.generateContent(promptCompleto);
         const respuestaIA = result.response.text();
