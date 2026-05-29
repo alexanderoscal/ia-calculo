@@ -1,15 +1,17 @@
 require('dotenv').config();
 const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
-const bcrypt = require('bcrypt');
-const { GoogleGenerativeAI } = require('@google/generative-ai'); // ✅ Correcto
+const bcrypt = require('bcryptjs');  // ← si falla en Render, cambiar a bcryptjs
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const app = express();
-const PORT = process.env.PORT || 3000; // Render asigna process.env.PORT automáticamente
+const PORT = process.env.PORT || 3000;
 const SALT_ROUNDS = 10;
 
-// Supabase
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+// Supabase con esquema explícito (evita problemas de conexión)
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY, {
+    db: { schema: 'public' }
+});
 
 // Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -20,14 +22,18 @@ app.use(express.static('public'));
 // ------------------ REGISTRO ------------------
 app.post('/api/registrar', async (req, res) => {
     const { usuario, contrasena } = req.body;
-    if (!usuario || !contrasena) return res.status(400).json({ error: 'Usuario y contraseña requeridos' });
+    if (!usuario || !contrasena) {
+        return res.status(400).json({ error: 'Usuario y contraseña requeridos' });
+    }
     try {
         const contrasenaEncriptada = await bcrypt.hash(contrasena, SALT_ROUNDS);
         const { error } = await supabase
             .from('usuarios_calculo')
             .insert([{ usuario: usuario.toLowerCase().trim(), contrasena: contrasenaEncriptada }]);
         if (error) {
-            if (error.code === '23505') return res.status(400).json({ error: 'El usuario ya existe' });
+            if (error.code === '23505') {
+                return res.status(400).json({ error: 'El usuario ya existe' });
+            }
             throw error;
         }
         res.json({ mensaje: 'Usuario creado con éxito' });
@@ -40,16 +46,22 @@ app.post('/api/registrar', async (req, res) => {
 // ------------------ LOGIN ------------------
 app.post('/api/login', async (req, res) => {
     const { usuario, contrasena } = req.body;
-    if (!usuario || !contrasena) return res.status(400).json({ error: 'Campos incompletos' });
+    if (!usuario || !contrasena) {
+        return res.status(400).json({ error: 'Campos incompletos' });
+    }
     try {
         const { data: user, error } = await supabase
             .from('usuarios_calculo')
             .select('*')
             .eq('usuario', usuario.toLowerCase().trim())
             .single();
-        if (error || !user) return res.status(400).json({ error: 'Usuario o contraseña incorrectos' });
+        if (error || !user) {
+            return res.status(400).json({ error: 'Usuario o contraseña incorrectos' });
+        }
         const coincide = await bcrypt.compare(contrasena, user.contrasena);
-        if (!coincide) return res.status(400).json({ error: 'Usuario o contraseña incorrectos' });
+        if (!coincide) {
+            return res.status(400).json({ error: 'Usuario o contraseña incorrectos' });
+        }
         res.json({ usuario: user.usuario });
     } catch (err) {
         console.error(err);
@@ -60,7 +72,9 @@ app.post('/api/login', async (req, res) => {
 // ------------------ ASISTENTE IA (RAG) ------------------
 app.post('/api/preguntar', async (req, res) => {
     const { pregunta } = req.body;
-    if (!pregunta) return res.status(400).json({ error: 'La pregunta es requerida' });
+    if (!pregunta) {
+        return res.status(400).json({ error: 'La pregunta es requerida' });
+    }
 
     try {
         const palabras = pregunta.toLowerCase().split(/\s+/);
@@ -93,7 +107,8 @@ app.post('/api/preguntar', async (req, res) => {
         }
 
         const promptCompleto = `${instruccionesIA}\n\nPregunta del estudiante: ${pregunta}\nRespuesta educativa estructurada:`;
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        // Modelo actualizado a gemini-2.0-flash (estable y rápido)
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
         const result = await model.generateContent(promptCompleto);
         const respuestaIA = result.response.text();
 
