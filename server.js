@@ -2,7 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
 const bcrypt = require('bcrypt');
-// 1. Importar el SDK oficial de Google Generative AI
+
+// 1. Importación correcta del SDK oficial de Google
 const { GoogleGenAI } = require('@google/generative-ai');
 
 const app = express();
@@ -12,17 +13,67 @@ const SALT_ROUNDS = 10;
 // Inicializar Supabase
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-// 2. Inicializar el cliente de Gemini con tu API Key existente
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+// 2. Inicialización corregida (Se le pasa la llave directo como String)
+const ai = new GoogleGenAI(process.env.GEMINI_API_KEY);
 
 app.use(express.json());
 app.use(express.static('public'));
 
-// [Rutas de Registro y Login se mantienen exactamente igual...]
-app.post('/api/registrar', async (req, res) => { /* ... */ });
-app.post('/api/login', async (req, res) => { /* ... */ });
+// 1. RUTA PARA REGISTRAR UN USUARIO NUEVO
+app.post('/api/registrar', async (req, res) => {
+    const { usuario, contrasena } = req.body;
+    if (!usuario || !contrasena) return res.status(400).json({ error: 'Usuario y contraseña requeridos' });
 
-// 3. RUTA DEL ASISTENTE IA OPTIMIZADA
+    try {
+        const contrasenaEncriptada = await bcrypt.hash(contrasena, SALT_ROUNDS);
+
+        const { data, error } = await supabase
+            .from('usuarios_calculo')
+            .insert([{ usuario: usuario.toLowerCase().trim(), contrasena: contrasenaEncriptada }]);
+
+        if (error) {
+            if (error.code === '23505') {
+                return res.status(400).json({ error: 'El usuario ya existe' });
+            }
+            throw error;
+        }
+
+        res.json({ mensaje: 'Usuario creado con éxito' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error al registrar usuario' });
+    }
+});
+
+// 2. RUTA PARA INICIAR SESIÓN (LOGIN)
+app.post('/api/login', async (req, res) => {
+    const { usuario, contrasena } = req.body;
+    if (!usuario || !contrasena) return res.status(400).json({ error: 'Campos incompletos' });
+
+    try {
+        const { data: user, error } = await supabase
+            .from('usuarios_calculo')
+            .select('*')
+            .eq('usuario', usuario.toLowerCase().trim())
+            .single();
+
+        if (error || !user) {
+            return res.status(400).json({ error: 'Usuario o contraseña incorrectos' });
+        }
+
+        const coincide = await bcrypt.compare(contrasena, user.contrasena);
+        if (!coincide) {
+            return res.status(400).json({ error: 'Usuario o contraseña incorrectos' });
+        }
+
+        res.json({ usuario: user.usuario });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error en el inicio de sesión' });
+    }
+});
+
+// 3. RUTA DEL ASISTENTE IA OPTIMIZADA (Gemini 1.5 Flash)
 app.post('/api/preguntar', async (req, res) => {
     const { pregunta } = req.body;
     if (!pregunta) return res.status(400).json({ error: 'La pregunta es requerida' });
@@ -72,7 +123,7 @@ app.post('/api/preguntar', async (req, res) => {
 
         const promptCompleto = `${instruccionesIA}\n\nPregunta del estudiante: ${pregunta}\nRespuesta educativa estructurada:`;
 
-        // 3. Llamada utilizando el modelo robusto gemini-1.5-flash
+        // 3. Llamada utilizando el SDK oficial y el modelo gemini-1.5-flash
         const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
         const result = await model.generateContent(promptCompleto);
         const respuestaIA = result.response.text();
