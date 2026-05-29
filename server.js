@@ -69,7 +69,31 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// ------------------ ASISTENTE IA (RAG) con errores mejorados ------------------
+// ------------------ ASISTENTE IA con modelos alternativos ------------------
+// Lista de modelos a probar en orden (el primero que funcione se usará)
+const MODELOS_GEMINI = ["gemini-pro", "gemini-1.5-pro", "gemini-2.0-flash"];
+
+async function generarRespuestaConGemini(prompt, intentos = 0) {
+    if (intentos >= MODELOS_GEMINI.length) {
+        throw new Error("No hay modelos disponibles. Verifica tu API key o la conectividad.");
+    }
+    const modelName = MODELOS_GEMINI[intentos];
+    try {
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const result = await model.generateContent(prompt);
+        const respuesta = result.response.text();
+        if (!respuesta) throw new Error("Respuesta vacía del modelo");
+        return { respuesta, modeloUsado: modelName };
+    } catch (err) {
+        console.warn(`Modelo ${modelName} falló: ${err.message}`);
+        // Si el error es 404 o modelo no encontrado, intentar con el siguiente
+        if (err.status === 404 || err.message?.includes("not found")) {
+            return generarRespuestaConGemini(prompt, intentos + 1);
+        }
+        throw err; // Otro tipo de error (429, 401, etc.) se lanza directamente
+    }
+}
+
 app.post('/api/preguntar', async (req, res) => {
     const { pregunta } = req.body;
     if (!pregunta) {
@@ -77,7 +101,7 @@ app.post('/api/preguntar', async (req, res) => {
     }
 
     try {
-        // Buscar en Supabase
+        // 1. Buscar contexto en Supabase (RAG)
         const palabras = pregunta.toLowerCase().split(/\s+/);
         const { data: contenidos, error } = await supabase
             .from('contenido_calculo')
@@ -109,15 +133,13 @@ app.post('/api/preguntar', async (req, res) => {
 
         const promptCompleto = `${instruccionesIA}\n\nPregunta del estudiante: ${pregunta}\nRespuesta educativa estructurada:`;
 
-        // ✅ CAMBIO: Modelo gemini-1.5-flash (más estable y con buen soporte)
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-        const result = await model.generateContent(promptCompleto);
-        const respuestaIA = result.response.text();
+        // 2. Llamar a Gemini con fallback automático de modelos
+        const { respuesta, modeloUsado } = await generarRespuestaConGemini(promptCompleto);
 
-        if (!respuestaIA) {
-            return res.json({ respuesta: "⚠️ La IA no generó contenido. Inténtalo de nuevo más tarde." });
-        }
-        res.json({ respuesta: respuestaIA });
+        // Opcional: agregar un pequeño pie de página indicando el modelo usado (para depuración)
+        const respuestaFinal = `${respuesta}\n\n---\n*🤖 Modelo usado: ${modeloUsado}*`;
+
+        res.json({ respuesta: respuestaFinal });
     } catch (err) {
         console.error("Error en /api/preguntar:", err);
 
@@ -129,8 +151,8 @@ app.post('/api/preguntar', async (req, res) => {
             mensajeError = "🔑 Clave de API inválida o no configurada. Verifica tu variable GEMINI_API_KEY en Render.";
         } else if (err.message?.includes("network") || err.message?.includes("fetch")) {
             mensajeError = "🌐 Problema de red. No se pudo conectar con la API de Gemini.";
-        } else if (err.message?.includes("model")) {
-            mensajeError = "🧠 El modelo especificado no está disponible. Contacta al administrador.";
+        } else if (err.message?.includes("not found") || err.status === 404) {
+            mensajeError = "🧠 Modelo de IA no disponible temporalmente. Inténtalo más tarde.";
         } else {
             mensajeError = `❌ Error inesperado: ${err.message || err}`;
         }
