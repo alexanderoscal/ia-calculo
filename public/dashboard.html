@@ -8,7 +8,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+    <!-- MathJax: versión ligera para LaTeX -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" id="MathJax-script" async></script>
+    <!-- Marked para convertir Markdown a HTML -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root {
@@ -164,7 +166,7 @@
             border-color: rgba(239, 68, 68, 0.2);
         }
 
-        /* Contenido principal a la izquierda */
+        /* Contenido principal */
         .main-content {
             flex: 1;
             display: flex;
@@ -344,7 +346,7 @@
 
 <body>
 
-    <!-- SIDEBAR A LA DERECHA -->
+    <!-- SIDEBAR DERECHA -->
     <aside class="sidebar">
         <div>
             <div class="sidebar-brand">
@@ -361,11 +363,15 @@
                 </div>
                 <div class="menu-item"
                     onclick="insertarSugerencia('Explícame de forma sencilla la regla de la cadena para derivadas')">
-                    <i class="fa-solid fa-wave-square"></i> 2. Reglas de Derivación
+                    <i class="fa-solid fa-wave-square"></i> 2. Regla de la Cadena
                 </div>
                 <div class="menu-item"
                     onclick="insertarSugerencia('¿Cómo se aplican las derivadas en un problema de optimización?')">
-                    <i class="fa-solid fa-arrow-trend-up"></i> 3. Aplicaciones Prácticas
+                    <i class="fa-solid fa-arrow-trend-up"></i> 3. Optimización
+                </div>
+                <div class="menu-item"
+                    onclick="insertarSugerencia('¿Cómo resolver límites indeterminados por factorización?')">
+                    <i class="fa-solid fa-calculator"></i> 4. Límites por factorización
                 </div>
             </div>
         </div>
@@ -437,7 +443,10 @@
                 const data = await response.json();
                 // Convertir Markdown a HTML
                 indicadorPensando.innerHTML = marked.parse(data.respuesta);
-                if (window.MathJax?.typesetPromise) window.MathJax.typesetPromise();
+                // Renderizar fórmulas con MathJax
+                if (window.MathJax) {
+                    MathJax.typesetPromise([indicadorPensando]).catch(err => console.log(err));
+                }
                 // Extraer tema y agregar botón de ejercicios
                 const temaExtraido = pregunta.split(' ').slice(0, 5).join(' ');
                 currentRespuestaElement = indicadorPensando;
@@ -467,7 +476,9 @@
                 data.ejercicios.forEach(ej => ejerciciosHtml += `<li>${ej}</li>`);
                 ejerciciosHtml += '</ul><small>Intenta resolverlos y consulta las dudas conmigo.</small>';
                 ejerciciosMsg.innerHTML = ejerciciosHtml;
-                if (window.MathJax?.typesetPromise) window.MathJax.typesetPromise();
+                if (window.MathJax) {
+                    MathJax.typesetPromise([ejerciciosMsg]).catch(err => console.log(err));
+                }
             } catch (err) {
                 ejerciciosMsg.innerHTML = '⚠️ No se pudieron generar ejercicios en este momento.';
             }
