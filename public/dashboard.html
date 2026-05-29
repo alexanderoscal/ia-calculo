@@ -9,18 +9,14 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root {
             --bg-main: #0f172a;
-            /* Azul pizarra oscuro (Más institucional) */
             --bg-sidebar: #1e293b;
-            /* Contraste perfecto para el menú */
             --bg-card: #ffffff;
-            /* Las respuestas de la IA ahora serán tarjetas blancas/claras súper legibles */
             --bg-user-msg: #f1f5f9;
-            /* Burbuja gris claro para el alumno */
             --primary-umg: #3b82f6;
-            /* Azul brillante universitario */
             --primary-hover: #2563eb;
             --texto-oscuro: #1e293b;
             --texto-claro: #f8fafc;
@@ -42,18 +38,20 @@
             height: 100vh;
             display: flex;
             overflow: hidden;
+            flex-direction: row;
         }
 
-        /* SIDEBAR INSTITUCIONAL */
+        /* Sidebar a la derecha */
         .sidebar {
             width: 290px;
             height: 100%;
             background-color: var(--bg-sidebar);
-            border-right: 1px solid var(--border-color);
+            border-left: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             padding: 26px;
+            order: 2;
         }
 
         .sidebar-brand {
@@ -148,7 +146,6 @@
             justify-content: center;
             font-weight: 700;
             font-size: 1rem;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
         }
 
         .btn-logout {
@@ -167,13 +164,14 @@
             border-color: rgba(239, 68, 68, 0.2);
         }
 
-        /* ESPACIO DE TRABAJO PRINCIPAL */
+        /* Contenido principal a la izquierda */
         .main-content {
             flex: 1;
             display: flex;
             flex-direction: column;
             height: 100%;
             background-color: #0b0f19;
+            order: 1;
         }
 
         .main-header {
@@ -201,7 +199,7 @@
             font-weight: 500;
         }
 
-        /* AREA DE CONTENIDO ESTILO REPASO */
+        /* Mensajes */
         .chat-messages {
             flex: 1;
             padding: 40px;
@@ -211,7 +209,6 @@
             gap: 28px;
         }
 
-        /* CAMBIO RADICAL EN LAS BURBUJAS */
         .msg {
             padding: 20px 24px;
             border-radius: 16px;
@@ -233,7 +230,6 @@
             }
         }
 
-        /* El mensaje del alumno */
         .msg.user {
             background-color: var(--bg-user-msg);
             color: var(--texto-oscuro);
@@ -243,7 +239,6 @@
             font-weight: 500;
         }
 
-        /* La respuesta de la IA (Estilo Tarjeta de Estudio) */
         .msg.ia {
             background-color: var(--bg-card);
             color: var(--texto-oscuro);
@@ -257,7 +252,47 @@
             color: #0f172a;
         }
 
-        /* CONTENEDOR DE ENTRADA */
+        .msg.ia pre {
+            background-color: #1e293b;
+            color: #f8fafc;
+            padding: 16px;
+            border-radius: 12px;
+            overflow-x: auto;
+            margin-top: 12px;
+            font-family: monospace;
+        }
+
+        .msg.ia code {
+            background-color: #e2e8f0;
+            color: #1e293b;
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-family: monospace;
+        }
+
+        .msg.ia ul,
+        .msg.ia ol {
+            margin-left: 1.5rem;
+            margin-top: 8px;
+            margin-bottom: 8px;
+        }
+
+        .btn-ejercicios {
+            background: none;
+            border: none;
+            color: var(--primary-umg);
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 15px;
+            display: inline-block;
+            transition: 0.2s;
+        }
+
+        .btn-ejercicios:hover {
+            text-decoration: underline;
+        }
+
+        /* Input */
         .chat-input-container {
             padding: 28px 40px;
             background-color: var(--bg-sidebar);
@@ -304,37 +339,21 @@
         .btn-enviar:hover {
             background-color: var(--primary-hover);
         }
-
-        .msg pre {
-            background-color: #1e293b;
-            color: #f8fafc;
-            padding: 16px;
-            border-radius: 12px;
-            overflow-x: auto;
-            margin-top: 12px;
-            font-family: 'Fira Code', monospace;
-            font-size: 0.9rem;
-        }
     </style>
 </head>
 
 <body>
 
+    <!-- SIDEBAR A LA DERECHA -->
     <aside class="sidebar">
         <div>
             <div class="sidebar-brand">
-                <div class="icon-box">
-                    <i class="fa-solid fa-graduation-cap"></i>
-                </div>
+                <div class="icon-box"><i class="fa-solid fa-graduation-cap"></i></div>
                 <h3>Portal de Cálculo</h3>
             </div>
-
             <div class="sidebar-menu">
                 <span class="menu-section-title">Canal de Consultas</span>
-                <div class="menu-item active">
-                    <i class="fa-regular fa-comment-dots"></i> Tutoría Virtual IA
-                </div>
-
+                <div class="menu-item active"><i class="fa-regular fa-comment-dots"></i> Tutoría Virtual IA</div>
                 <span class="menu-section-title">Temario Sugerido</span>
                 <div class="menu-item"
                     onclick="insertarSugerencia('¿Qué es un límite matemático y cuáles son sus propiedades?')">
@@ -350,7 +369,6 @@
                 </div>
             </div>
         </div>
-
         <div class="sidebar-user">
             <div class="user-info">
                 <div class="user-avatar" id="avatarLetra">U</div>
@@ -364,73 +382,52 @@
                     </span>
                 </div>
             </div>
-            <button class="btn-logout" onclick="logout()" title="Cerrar Módulo">
-                <i class="fa-solid fa-power-off"></i>
-            </button>
+            <button class="btn-logout" onclick="logout()" title="Cerrar Módulo"><i
+                    class="fa-solid fa-power-off"></i></button>
         </div>
     </aside>
 
+    <!-- CONTENIDO PRINCIPAL (CHAT) -->
     <main class="main-content">
         <header class="main-header">
             <h1>Tutor de Aprendizaje Inteligente</h1>
-            <div class="course-badge">
-                <i class="fa-regular fa-bookmark" style="margin-right: 6px;"></i> Ingeniería en Sistemas • UMG
-            </div>
+            <div class="course-badge"><i class="fa-regular fa-bookmark" style="margin-right: 6px;"></i> Ingeniería en
+                Sistemas • UMG</div>
         </header>
-
-        <div class="chat-messages" id="chatBoxes">
-        </div>
-
+        <div class="chat-messages" id="chatBoxes"></div>
         <div class="chat-input-container">
             <div class="input-wrapper">
                 <input type="text" id="userInput"
                     placeholder="Formula una pregunta sobre teoremas, funciones o ejercicios de Cálculo..."
                     onkeypress="if(event.key === 'Enter') procesarPregunta()">
-                <button class="btn-enviar" onclick="procesarPregunta()">
-                    <i class="fa-solid fa-paper-plane"></i>
-                </button>
+                <button class="btn-enviar" onclick="procesarPregunta()"><i class="fa-solid fa-paper-plane"></i></button>
             </div>
         </div>
     </main>
 
     <script>
+        let currentRespuestaElement = null;
+        let currentTema = "";
+
         window.onload = () => {
             const usuario = localStorage.getItem('sesion_usuario');
-            if (!usuario) {
-                window.location.href = '/index.html';
-                return;
-            }
-
+            if (!usuario) { window.location.href = '/index.html'; return; }
             document.getElementById('sidebarNombre').innerText = usuario;
             document.getElementById('avatarLetra').innerText = usuario.charAt(0).toUpperCase();
-
-            // Mensaje Inicial Limpio y Personalizado
-            document.getElementById('chatBoxes').innerHTML = `
-                <div class="msg ia">¡Bienvenido, <strong style="text-transform: capitalize;">${usuario}</strong>! Listo para aprender más sobre cálculo. ¿Qué tema o fórmula deseas resolver hoy?</div>
-            `;
+            document.getElementById('chatBoxes').innerHTML = `<div class="msg ia">¡Bienvenido, <strong style="text-transform: capitalize;">${usuario}</strong>! Listo para aprender más sobre cálculo. ¿Qué tema o fórmula deseas resolver hoy?</div>`;
             document.getElementById('userInput').focus();
         };
 
-        function logout() {
-            localStorage.removeItem('sesion_usuario');
-            window.location.href = '/index.html';
-        }
-
-        function insertarSugerencia(texto) {
-            document.getElementById('userInput').value = texto;
-            document.getElementById('userInput').focus();
-        }
+        function logout() { localStorage.removeItem('sesion_usuario'); window.location.href = '/index.html'; }
+        function insertarSugerencia(texto) { document.getElementById('userInput').value = texto; document.getElementById('userInput').focus(); }
 
         async function procesarPregunta() {
             const userInput = document.getElementById('userInput');
             const pregunta = userInput.value.trim();
             if (!pregunta) return;
-
             agregarMensaje(pregunta, 'user');
             userInput.value = '';
-
             const indicadorPensando = agregarMensaje('<i class="fa-solid fa-circle-notch fa-spin"></i> Contrastando con los registros del curso y estructurando respuesta...', 'ia');
-
             try {
                 const response = await fetch('/api/preguntar', {
                     method: 'POST',
@@ -438,12 +435,41 @@
                     body: JSON.stringify({ pregunta })
                 });
                 const data = await response.json();
-
-                indicadorPensando.innerHTML = data.respuesta.replace(/\n/g, '<br>');
+                // Convertir Markdown a HTML
+                indicadorPensando.innerHTML = marked.parse(data.respuesta);
                 if (window.MathJax?.typesetPromise) window.MathJax.typesetPromise();
-
+                // Extraer tema y agregar botón de ejercicios
+                const temaExtraido = pregunta.split(' ').slice(0, 5).join(' ');
+                currentRespuestaElement = indicadorPensando;
+                currentTema = temaExtraido;
+                const btn = document.createElement('button');
+                btn.innerText = '📘 Sugerir ejercicios sobre este tema';
+                btn.className = 'btn-ejercicios';
+                btn.onclick = () => sugerirEjercicios(currentTema);
+                indicadorPensando.appendChild(btn);
             } catch (err) {
                 indicadorPensando.innerText = "Error al conectar con la plataforma central.";
+            }
+        }
+
+        async function sugerirEjercicios(tema) {
+            if (!tema) return;
+            const ejerciciosMsg = agregarMensaje('<i class="fa-solid fa-spinner fa-pulse"></i> Generando ejercicios prácticos...', 'ia');
+            try {
+                const response = await fetch('/api/sugerir-ejercicios', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tema })
+                });
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
+                let ejerciciosHtml = '<strong>📌 Ejercicios sugeridos para practicar:</strong><ul>';
+                data.ejercicios.forEach(ej => ejerciciosHtml += `<li>${ej}</li>`);
+                ejerciciosHtml += '</ul><small>Intenta resolverlos y consulta las dudas conmigo.</small>';
+                ejerciciosMsg.innerHTML = ejerciciosHtml;
+                if (window.MathJax?.typesetPromise) window.MathJax.typesetPromise();
+            } catch (err) {
+                ejerciciosMsg.innerHTML = '⚠️ No se pudieron generar ejercicios en este momento.';
             }
         }
 

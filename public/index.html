@@ -70,6 +70,7 @@
             font-size: 1.8rem;
             font-weight: 700;
             background: linear-gradient(to right, #ffffff, #94a3b8);
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -175,7 +176,6 @@
 </head>
 
 <body>
-
     <div class="auth-wrapper">
         <div class="auth-card active" id="cardLogin">
             <div class="auth-header">
@@ -183,42 +183,28 @@
                 <p>Portal Universitario de Cálculo 1</p>
             </div>
             <div class="status-msg" id="loginMsg"></div>
-            <div class="form-group">
-                <label><i class="fa-regular fa-user"></i> Usuario</label>
-                <input type="text" id="login_user" placeholder="Ingresa tu usuario">
-            </div>
-            <div class="form-group">
-                <label><i class="fa-solid fa-lock"></i> Contraseña</label>
-                <input type="password" id="login_pass" placeholder="••••••••">
-            </div>
+            <div class="form-group"><label><i class="fa-regular fa-user"></i> Usuario</label><input type="text"
+                    id="login_user" placeholder="Ingresa tu usuario"></div>
+            <div class="form-group"><label><i class="fa-solid fa-lock"></i> Contraseña</label><input type="password"
+                    id="login_pass" placeholder="••••••••"></div>
             <button class="btn-accion" onclick="ejecutarLogin()">Acceder</button>
-            <div class="auth-footer">
-                ¿No tienes cuenta? <a onclick="irAPantalla('cardRegister')">Créala aquí</a>
-            </div>
+            <div class="auth-footer">¿No tienes cuenta? <a onclick="irAPantalla('cardRegister')">Créala aquí</a></div>
         </div>
-
         <div class="auth-card" id="cardRegister">
             <div class="auth-header">
                 <h2>Crear Cuenta</h2>
                 <p>Regístrate en la plataforma de la U</p>
             </div>
             <div class="status-msg" id="registerMsg"></div>
-            <div class="form-group">
-                <label>Elige tu Usuario</label>
-                <input type="text" id="reg_user" placeholder="Ej: brayan_oscal">
-            </div>
-            <div class="form-group">
-                <label>Contraseña</label>
-                <input type="password" id="reg_pass" placeholder="Mínimo 6 caracteres">
-            </div>
+            <div class="form-group"><label>Elige tu Usuario</label><input type="text" id="reg_user"
+                    placeholder="Ej: brayan_oscal"></div>
+            <div class="form-group"><label>Contraseña</label><input type="password" id="reg_pass"
+                    placeholder="Mínimo 6 caracteres"></div>
             <button class="btn-accion" onclick="ejecutarRegistro()"
                 style="background-color: var(--verde-exito);">Registrar Usuario</button>
-            <div class="auth-footer">
-                ¿Ya tienes una cuenta? <a onclick="irAPantalla('cardLogin')">Inicia sesión</a>
-            </div>
+            <div class="auth-footer">¿Ya tienes cuenta? <a onclick="irAPantalla('cardLogin')">Inicia sesión</a></div>
         </div>
     </div>
-
     <script>
         function irAPantalla(pantallaId) {
             document.querySelectorAll('.auth-card').forEach(card => card.classList.remove('active'));
@@ -226,72 +212,28 @@
             document.getElementById('loginMsg').className = 'status-msg';
             document.getElementById('registerMsg').className = 'status-msg';
         }
-
-        window.onload = () => {
-            if (localStorage.getItem('sesion_usuario')) {
-                window.location.href = '/dashboard.html';
-            }
-        };
-
+        window.onload = () => { if (localStorage.getItem('sesion_usuario')) window.location.href = '/dashboard.html'; };
         async function ejecutarLogin() {
             const usuario = document.getElementById('login_user').value.trim();
             const contrasena = document.getElementById('login_pass').value;
             const msgBox = document.getElementById('loginMsg');
-
-            if (!usuario || !contrasena) {
-                msgBox.innerText = "Por favor llena todos los campos.";
-                msgBox.className = "status-msg error";
-                return;
-            }
-
-            const res = await fetch('/api/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ usuario, contrasena })
-            });
+            if (!usuario || !contrasena) { msgBox.innerText = "Por favor llena todos los campos."; msgBox.className = "status-msg error"; return; }
+            const res = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ usuario, contrasena }) });
             const data = await res.json();
-
-            if (data.error) {
-                msgBox.innerText = data.error;
-                msgBox.className = "status-msg error";
-                return;
-            }
-
+            if (data.error) { msgBox.innerText = data.error; msgBox.className = "status-msg error"; return; }
             localStorage.setItem('sesion_usuario', data.usuario);
             window.location.href = '/dashboard.html';
         }
-
         async function ejecutarRegistro() {
             const usuario = document.getElementById('reg_user').value.trim();
             const contrasena = document.getElementById('reg_pass').value;
             const msgBox = document.getElementById('registerMsg');
-
-            if (!usuario || !contrasena) {
-                msgBox.innerText = "Completa los campos para tu registro.";
-                msgBox.className = "status-msg error";
-                return;
-            }
-
-            const res = await fetch('/api/registrar', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ usuario, contrasena })
-            });
+            if (!usuario || !contrasena) { msgBox.innerText = "Completa los campos para tu registro."; msgBox.className = "status-msg error"; return; }
+            const res = await fetch('/api/registrar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ usuario, contrasena }) });
             const data = await res.json();
-
-            if (data.error) {
-                msgBox.innerText = data.error;
-                msgBox.className = "status-msg error";
-                return;
-            }
-
-            msgBox.innerText = "¡Cuenta creada con éxito! Redirigiendo...";
-            msgBox.className = "status-msg exito";
-
-            setTimeout(() => {
-                document.getElementById('login_user').value = usuario;
-                irAPantalla('cardLogin');
-            }, 1200);
+            if (data.error) { msgBox.innerText = data.error; msgBox.className = "status-msg error"; return; }
+            msgBox.innerText = "¡Cuenta creada con éxito! Redirigiendo..."; msgBox.className = "status-msg exito";
+            setTimeout(() => { document.getElementById('login_user').value = usuario; irAPantalla('cardLogin'); }, 1200);
         }
     </script>
 </body>
