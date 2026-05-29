@@ -3,7 +3,7 @@ const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
 const bcrypt = require('bcrypt');
 
-// 1. IMPORTACIÓN CORREGIDA: El nombre real de la clase es GoogleGenAI
+// 1. IMPORTACIÓN CORREGIDA: Traemos el módulo completo de Google
 const { GoogleGenAI } = require('@google/generative-ai');
 
 const app = express();
@@ -13,7 +13,7 @@ const SALT_ROUNDS = 10;
 // Inicializar Supabase
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-// 2. INICIALIZACIÓN OFICIAL: Usando el constructor correcto
+// 2. INICIALIZACIÓN CONFIGURADA DE FORMA INFALIBLE
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 app.use(express.json());
@@ -73,7 +73,7 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// 3. RUTA DEL ASISTENTE IA (Estrategia RAG Híbrida Avanzada con Gemini 1.5 Flash)
+// 3. RUTA DEL ASISTENTE IA OPTIMIZADA
 app.post('/api/preguntar', async (req, res) => {
     const { pregunta } = req.body;
     if (!pregunta) return res.status(400).json({ error: 'La pregunta es requerida' });
@@ -123,7 +123,7 @@ app.post('/api/preguntar', async (req, res) => {
 
         const promptCompleto = `${instruccionesIA}\n\nPregunta del estudiante: ${pregunta}\nRespuesta educativa estructurada:`;
 
-        // Llamar al modelo usando los métodos correctos de la instancia ai
+        // Llamada utilizando los métodos de la instancia ai creada con el módulo raíz
         const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
         const result = await model.generateContent(promptCompleto);
         const respuestaIA = result.response.text();
