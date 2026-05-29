@@ -1,14 +1,14 @@
 require('dotenv').config();
 const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
-const bcrypt = require('bcryptjs');  // ← si falla en Render, cambiar a bcryptjs
+const bcrypt = require('bcryptjs');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const SALT_ROUNDS = 10;
 
-// Supabase con esquema explícito (evita problemas de conexión)
+// Supabase
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY, {
     db: { schema: 'public' }
 });
@@ -69,7 +69,7 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// ------------------ ASISTENTE IA (RAG) ------------------
+// ------------------ ASISTENTE IA (RAG) con errores mejorados ------------------
 app.post('/api/preguntar', async (req, res) => {
     const { pregunta } = req.body;
     if (!pregunta) {
@@ -77,6 +77,7 @@ app.post('/api/preguntar', async (req, res) => {
     }
 
     try {
+        // Buscar en Supabase
         const palabras = pregunta.toLowerCase().split(/\s+/);
         const { data: contenidos, error } = await supabase
             .from('contenido_calculo')
@@ -107,18 +108,34 @@ app.post('/api/preguntar', async (req, res) => {
         }
 
         const promptCompleto = `${instruccionesIA}\n\nPregunta del estudiante: ${pregunta}\nRespuesta educativa estructurada:`;
-        // Modelo actualizado a gemini-2.0-flash (estable y rápido)
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+        // ✅ CAMBIO: Modelo gemini-1.5-flash (más estable y con buen soporte)
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         const result = await model.generateContent(promptCompleto);
         const respuestaIA = result.response.text();
 
         if (!respuestaIA) {
-            return res.json({ respuesta: "La IA no pudo generar una respuesta en este momento. Inténtalo de nuevo." });
+            return res.json({ respuesta: "⚠️ La IA no generó contenido. Inténtalo de nuevo más tarde." });
         }
         res.json({ respuesta: respuestaIA });
     } catch (err) {
         console.error("Error en /api/preguntar:", err);
-        res.status(500).json({ error: 'Error interno al procesar la consulta' });
+
+        // Mensajes de error claros según el tipo de fallo
+        let mensajeError = "Error interno al procesar la consulta.";
+        if (err.status === 429) {
+            mensajeError = "🚫 Límite de cuota excedido. Por favor, espera un momento o revisa tu plan de facturación en Google AI Studio. (Error 429)";
+        } else if (err.status === 401 || err.message?.includes("API key")) {
+            mensajeError = "🔑 Clave de API inválida o no configurada. Verifica tu variable GEMINI_API_KEY en Render.";
+        } else if (err.message?.includes("network") || err.message?.includes("fetch")) {
+            mensajeError = "🌐 Problema de red. No se pudo conectar con la API de Gemini.";
+        } else if (err.message?.includes("model")) {
+            mensajeError = "🧠 El modelo especificado no está disponible. Contacta al administrador.";
+        } else {
+            mensajeError = `❌ Error inesperado: ${err.message || err}`;
+        }
+
+        res.status(500).json({ error: mensajeError });
     }
 });
 
