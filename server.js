@@ -3,7 +3,7 @@ const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
 const bcrypt = require('bcrypt');
 
-// 1. Importación correcta del SDK oficial de Google
+// 1. IMPORTACIÓN CORREGIDA CON EL NOMBRE REAL DE LA CLASE
 const { GoogleGenAI } = require('@google/generative-ai');
 
 const app = express();
@@ -13,8 +13,8 @@ const SALT_ROUNDS = 10;
 // Inicializar Supabase
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-// 2. Inicialización corregida (Se le pasa la llave directo como String)
-const ai = new GoogleGenAI(process.env.GEMINI_API_KEY);
+// 2. INICIALIZACIÓN OFICIAL DEL SDK
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 app.use(express.json());
 app.use(express.static('public'));
@@ -73,7 +73,7 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// 3. RUTA DEL ASISTENTE IA OPTIMIZADA (Gemini 1.5 Flash)
+// 3. RUTA DEL ASISTENTE IA (Usando el modelo correcto de GoogleGenAI)
 app.post('/api/preguntar', async (req, res) => {
     const { pregunta } = req.body;
     if (!pregunta) return res.status(400).json({ error: 'La pregunta es requerida' });
@@ -109,7 +109,7 @@ app.post('/api/preguntar', async (req, res) => {
             instruccionesIA = `
             Eres un tutor experto en Cálculo 1 para la UMG. 
             Se ha encontrado información relevante directamente en la base de datos universitaria de Supabase.
-            Usa el siguiente contexto local de forma prioritaria para responder y estructurar tu explicación:
+            Usa el siguiente contexto local de forma prioritaria para responder y estructurar tu explanation:
             
             ${contextoEncontrado}`;
         } else {
@@ -123,7 +123,7 @@ app.post('/api/preguntar', async (req, res) => {
 
         const promptCompleto = `${instruccionesIA}\n\nPregunta del estudiante: ${pregunta}\nRespuesta educativa estructurada:`;
 
-        // 3. Llamada utilizando el SDK oficial y el modelo gemini-1.5-flash
+        // Llamada con los métodos reales de la clase GoogleGenAI
         const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
         const result = await model.generateContent(promptCompleto);
         const respuestaIA = result.response.text();
